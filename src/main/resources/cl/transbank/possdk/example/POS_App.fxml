@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="everything" prefHeight="780.0" prefWidth="1016.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cl.transbank.possdk.example.PrimaryController">
+  <children>
+    <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="655.0" prefWidth="1000.0" VBox.vgrow="ALWAYS">
+      <children>
+            <TextArea fx:id="textArea" layoutX="729.0" layoutY="261.0" prefHeight="509.0" prefWidth="273.0" wrapText="true" />
+            <VBox prefHeight="782.0" prefWidth="724.0" spacing="10.0">
+               <children>
+                  <Pane prefHeight="279.0" prefWidth="724.0" style="-fx-background-color: #ddeeee;">
+                     <children>
+                        <Button layoutX="28.0" layoutY="41.0" mnemonicParsing="false" onAction="#addPorts" text="Listar Puertos" />
+                        <VBox fx:id="listPorts" layoutX="27.0" layoutY="75.0" prefHeight="160.0" prefWidth="485.0" style="-fx-background-color: #cceeee;" />
+                        <Label layoutX="14.0" layoutY="14.0" text="Conectar con el POS:" />
+                        <TextField fx:id="usedPort" editable="false" layoutX="478.0" layoutY="41.0" prefHeight="27.0" prefWidth="202.0" text="Desconectado" />
+                        <Label layoutX="385.0" layoutY="46.0" text="Puerto en uso:" />
+                        <Button fx:id="cerrarPuertoButton" disable="true" layoutX="559.0" layoutY="128.0" mnemonicParsing="false" onAction="#cerrarPuerto" text="Cerrar puerto" />
+                     </children>
+                  </Pane>
+                  <Pane fx:id="menuPane" disable="true" prefHeight="294.0" prefWidth="724.0" style="-fx-background-color: #ddeedd;">
+                     <children>
+                        <Label layoutX="14.0" layoutY="14.0" text="Menu:" />
+                        <HBox alignment="TOP_CENTER" layoutY="49.0" prefHeight="200.0" prefWidth="724.0" spacing="6.0">
+                           <children>
+                              <Button fx:id="comboButton" contentDisplay="TOP" mnemonicParsing="false" onAction="#addCombo" prefHeight="202.0" prefWidth="152.0" text="Combo: $5000">
+                                 <graphic>
+                                    <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@images/combo1.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="hamburguesaButton" contentDisplay="TOP" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#addHamburguesa" prefHeight="202.0" prefWidth="152.0" text="Hamburguesa: $3500">
+                                 <graphic>
+                                    <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@images/sandwich1.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="tacoButton" contentDisplay="TOP" layoutX="178.0" layoutY="10.0" mnemonicParsing="false" onAction="#addTaco" prefHeight="202.0" prefWidth="152.0" text="Taco: $2000">
+                                 <graphic>
+                                    <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@images/taco.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="coffeeButton" contentDisplay="TOP" layoutX="346.0" layoutY="10.0" mnemonicParsing="false" onAction="#addCoffee" prefHeight="202.0" prefWidth="152.0" text="Cafe: $1000">
+                                 <graphic>
+                                    <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@images/coffee1.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                              </Button>
+                           </children>
+                        </HBox>
+                     </children>
+                  </Pane>
+                  <Pane fx:id="ventaPane" disable="true" prefHeight="113.0" prefWidth="724.0" style="-fx-background-color: #bbeeee;">
+                     <children>
+                        <TextField fx:id="monto" editable="false" layoutX="132.0" layoutY="27.0" prefHeight="27.0" prefWidth="136.0" text="\$ 0" />
+                        <Label layoutX="84.0" layoutY="32.0" text="Monto:" />
+                        <Label layoutX="296.0" layoutY="32.0" text="Boleta: " />
+                        <TextField fx:id="boleta" editable="false" layoutX="344.0" layoutY="27.0" />
+                        <Button fx:id="venderButton" layoutX="532.0" layoutY="27.0" mnemonicParsing="false" onAction="#doSale" text="Vender" />
+                        <Label layoutX="14.0" layoutY="6.0" text="Venta:" />
+                        <Button fx:id="anularButton" layoutX="619.0" layoutY="27.0" mnemonicParsing="false" onAction="#resetSale" text="Anular" />
+                     </children>
+                  </Pane>
+                  <Pane fx:id="devolucionPane" disable="true" prefHeight="119.0" prefWidth="724.0" style="-fx-background-color: #eedddd;">
+                     <children>
+                        <TextField fx:id="refundTicket" layoutX="417.0" layoutY="21.0" />
+                        <Button layoutX="601.0" layoutY="21.0" mnemonicParsing="false" onAction="#onRefund" text="Devolver" />
+                        <Label layoutX="279.0" layoutY="26.0" text="Operación a devolver: " />
+                        <Label layoutX="14.0" layoutY="6.0" text="Devolución de venta:" />
+                     </children>
+                  </Pane>
+                  <Pane fx:id="otrosPane" disable="true" prefHeight="94.0" prefWidth="724.0" style="-fx-background-color: #dddddd;">
+                     <children>
+                        <Label layoutX="13.0" layoutY="10.0" text="Otros:" />
+                        <HBox fx:id="otros" alignment="CENTER" prefHeight="63.0" prefWidth="724.0" spacing="30.0">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#onKeysLoad" text="Cargar Llaves" />
+                              <Button mnemonicParsing="false" onAction="#onTransactionList" text="Listar transacciones" />
+                              <Button mnemonicParsing="false" onAction="#onBusinessClose" text="Cerrar dia" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </Pane>
+               </children>
+            </VBox>
+            <Label layoutX="737.0" layoutY="37.0" text="Respuesta:" />
+            <Label fx:id="responseMessage" alignment="TOP_LEFT" layoutX="806.0" layoutY="37.0" prefHeight="138.0" prefWidth="202.0" wrapText="true" />
+            <Label layoutX="737.0" layoutY="14.0" text="Codigo:" />
+            <Label fx:id="responseCode" layoutX="806.0" layoutY="14.0" prefHeight="17.0" prefWidth="178.0" />
+            <Label fx:id="operationLabel" layoutX="737.0" layoutY="185.0" text="Operacion:" translateY="2.0" />
+            <TextField fx:id="operationNumber" editable="false" layoutX="812.0" layoutY="182.0" prefHeight="27.0" prefWidth="101.0" />
+            <Label layoutX="737.0" layoutY="236.0" text="Log:" />
+      </children>
+    </AnchorPane>
+  </children>
+</VBox>
