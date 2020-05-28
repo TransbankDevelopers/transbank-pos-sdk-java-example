@@ -20,7 +20,15 @@ Para que la libreria de Java pueda encontrar la librería nativa, utiliza una va
 
 Por ejemplo en MacOS se debe correr el comando export en el mismo Shell en que se ejecutará el programa que utiliza la librería.
 
+```sh
 export NATIVE_TRANSBANK_WRAP=/usr/local/lib/libTransbankWrap.dylib
+```
+
+Además recuerda agregar al PATH la ruta de java
+
+```sh
+export PATH="/Library/Java/JavaVirtualMachines/jdk1.8.0_251.jdk/Contents/Home/bin:$PATH"
+```
 
 en Windows, se debe correr este comando en la ventana de Command.com antes de ejecutar el programa que utiliza la librería.
 
