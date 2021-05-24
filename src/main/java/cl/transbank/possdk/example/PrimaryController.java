@@ -128,7 +128,7 @@ public class PrimaryController {
 
     @FXML
     private void addCoffee() {
-        total += 1000;
+        total += 100;
         monto.setText("$ " + total);
         showOperation(false);
     }
@@ -314,6 +314,8 @@ public class PrimaryController {
 
     private void showAlert(String text) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.getDialogPane().setPrefWidth(400);
+        alert.getDialogPane().setPrefHeight(200);
         alert.setTitle("Advertencia");
         alert.setHeaderText(text);
         alert.showAndWait();
@@ -327,8 +329,8 @@ public class PrimaryController {
             System.out.println("polled: " + polled);
             textArea.setText("Polled: " + polled);
             togglearTodo(!polled);
-        } catch (TransbankPortNotConfiguredException e) {
-            System.out.println("Error when polling");
+        } catch (Exception e) {
+            System.err.println("Error when polling");
             e.printStackTrace();
         }
     }
@@ -357,7 +359,7 @@ public class PrimaryController {
     @FXML
     private void onTransactionList() {
         try {
-            List<DetailResponse> detailResponse = App.getPos().details(false);
+            List<DetailResponse> detailResponse = App.getPos().details(true);
             if (detailResponse.isEmpty()) {
                 textArea.setText("No hay transacciones previas.");
                 return;
