@@ -32,7 +32,9 @@ public class App extends Application {
         stage.setTitle("Caja POS Integrado");
         scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
         stage.setScene(scene);
+        stage.setMinHeight(800);
         stage.show();
+        
     }
 
     @Override
