@@ -2,12 +2,15 @@ package cl.transbank.possdk.example;
 
 import cl.transbank.pos.exceptions.TransbankException;
 import cl.transbank.pos.exceptions.TransbankPortNotConfiguredException;
+import cl.transbank.pos.exceptions.TransbankUnexpectedError;
 import cl.transbank.pos.helper.StringUtils;
 import cl.transbank.pos.responses.CloseResponse;
 import cl.transbank.pos.responses.DetailResponse;
 import cl.transbank.pos.responses.KeysResponse;
 import cl.transbank.pos.responses.RefundResponse;
+import cl.transbank.pos.responses.Response;
 import cl.transbank.pos.responses.SaleResponse;
+import cl.transbank.pos.responses.TotalsResponse;
 import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.SequentialTransition;
@@ -90,13 +93,9 @@ public class PrimaryController {
             List<String> ports = App.getPos().listPorts();
             for (String portName : ports) {
                 Button button = new Button("Usar puerto " + portName);
-                button.setOnAction(new EventHandler<ActionEvent>() {
-                                       @Override
-                                       public void handle(ActionEvent actionEvent) {
-                                           openPort(portName);
-                                       }
-                                   }
-                );
+                button.setOnAction((ActionEvent actionEvent) -> {
+                    openPort(portName);
+                });
                 listPorts.getChildren().add(button);
             }
         } catch (TransbankException e) {
@@ -155,16 +154,19 @@ public class PrimaryController {
                         setData(sale);
                     } catch (TransbankPortNotConfiguredException e) {
                         e.printStackTrace();
+                    } catch (TransbankUnexpectedError e) {
+                        Platform.runLater(() -> {
+                            showAlert(e.getMessage());
+                            textArea.setText(e.getMessage());
+                        });
                     }
                 }
 
                 @Override
                 public void updateInterface() {
                     SaleResponse sale = (SaleResponse) data;
-                    textArea.setText(sale.toString());
-                    responseCode.setText(sale.getResponseCode() + "");
-                    responseMessage.setText(sale.getResponseMessage());
-                    if (sale.isSuccessful()) {
+                    readResponse(sale);
+                    if (sale != null && sale.isSuccessful()) {
                         showOperation(true);
                         operationNumber.setText(sale.getOperationNumber() + "");
                     }
@@ -197,12 +199,11 @@ public class PrimaryController {
                         e.printStackTrace();
                     }
                 }
+
                 @Override
                 public void updateInterface() {
                     RefundResponse refund = (RefundResponse) data;
-                    textArea.setText(refund.toString());
-                    responseCode.setText(refund.getResponseCode() + "");
-                    responseMessage.setText(refund.getResponseMessage());
+                    readResponse(refund);
                 }
 
             };
@@ -216,6 +217,7 @@ public class PrimaryController {
         showOperation(false);
 
         final Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.initOwner(App.getScene().getWindow());
         alert.setTitle("Advertencia");
         alert.setHeaderText(text);
         //hack. Escondemos el boton de "ok"
@@ -223,23 +225,19 @@ public class PrimaryController {
         alert.getDialogPane().lookupButton(ButtonType.OK).setScaleY(0.0);
         alert.show();
         everything.setDisable(true);
-        Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    actualBusinessLogic.run();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    Platform.runLater(() -> {
-                        alert.close();
-                        actualBusinessLogic.updateInterface();
-                        everything.setDisable(false);
-                    });
-                }
+        new Thread(() -> {
+            try {
+                actualBusinessLogic.run();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                Platform.runLater(() -> {
+                    alert.close();
+                    actualBusinessLogic.updateInterface();
+                    everything.setDisable(false);
+                });
             }
-        };
-        new Thread(r).start();
+        }).start();
     }
 
     private void moveMonto(TextField textField) {
@@ -314,6 +312,7 @@ public class PrimaryController {
 
     private void showAlert(String text) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.initOwner(App.getScene().getWindow());
         alert.getDialogPane().setPrefWidth(400);
         alert.getDialogPane().setPrefHeight(200);
         alert.setTitle("Advertencia");
@@ -347,9 +346,7 @@ public class PrimaryController {
     private void onBusinessClose() {
         try {
             CloseResponse closeResponse = App.getPos().close();
-            textArea.setText(closeResponse.toString());
-            responseCode.setText(closeResponse.getResponseCode() + "");
-            responseMessage.setText(closeResponse.getResponseMessage());
+            readResponse(closeResponse);
         } catch (TransbankPortNotConfiguredException e) {
             System.out.println("Error when closing the day.");
             e.printStackTrace();
@@ -365,7 +362,7 @@ public class PrimaryController {
                 return;
             }
             StringBuilder sb = new StringBuilder();
-            for (DetailResponse dr: detailResponse) {
+            for (DetailResponse dr : detailResponse) {
                 sb.append(dr.toString() + "\n");
             }
             textArea.setText(sb.toString());
@@ -376,16 +373,53 @@ public class PrimaryController {
     }
 
     @FXML
+    private void onTotals() {
+        try {
+            TotalsResponse totalsResponse = App.getPos().getTotals();
+            readResponse(totalsResponse);
+        } catch (Exception e) {
+            System.out.println("Error when get totals.");
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void onLastSale() {
+        try {
+            SaleResponse saleResponse = App.getPos().getLastSale();
+            readResponse(saleResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void onNormalMode() {
+        try {
+            boolean isOk = App.getPos().setNormalMode();
+            textArea.setText(isOk ? "OK" : "Error");
+            responseCode.setText("");
+            responseMessage.setText("");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     private void onKeysLoad() {
         try {
             KeysResponse keysResponse = App.getPos().loadKeys();
-            textArea.setText(keysResponse.toString());
-            responseCode.setText(keysResponse.getResponseCode() + "");
-            responseMessage.setText(keysResponse.getResponseMessage());
+            readResponse(keysResponse);
         } catch (TransbankPortNotConfiguredException e) {
             System.out.println("Error when closing the day.");
             e.printStackTrace();
         }
+    }
+
+    private void readResponse(Response response) {
+        textArea.setText(response == null ? "" : response.toString());
+        responseCode.setText(response == null ? "" : Integer.toString(response.getResponseCode()));
+        responseMessage.setText(response == null ? "" : response.getResponseMessage());
     }
 
 }

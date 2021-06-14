@@ -22,6 +22,10 @@ public class App extends Application {
         return pos;
     }
 
+    public static Scene getScene() {
+        return scene;
+    }
+    
     @Override
     public void start(Stage stage) throws IOException, TransbankLinkException {
         BasicConfigurator.configure();
