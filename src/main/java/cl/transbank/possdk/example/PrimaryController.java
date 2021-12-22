@@ -1,13 +1,9 @@
 package cl.transbank.possdk.example;
 
-import cl.transbank.pos.exceptions.TransbankException;
-import cl.transbank.pos.exceptions.TransbankPortNotConfiguredException;
-import cl.transbank.pos.helper.StringUtils;
-import cl.transbank.pos.responses.CloseResponse;
-import cl.transbank.pos.responses.DetailResponse;
-import cl.transbank.pos.responses.KeysResponse;
-import cl.transbank.pos.responses.RefundResponse;
-import cl.transbank.pos.responses.SaleResponse;
+import cl.transbank.pos.exceptions.common.*;
+import cl.transbank.pos.exceptions.integrado.*;
+import cl.transbank.pos.responses.common.*;
+import cl.transbank.pos.responses.integrado.*;
 import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.SequentialTransition;
@@ -15,12 +11,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
@@ -86,22 +77,17 @@ public class PrimaryController {
     private void addPorts() {
         listPorts.setSpacing(10.0);
         listPorts.getChildren().clear();
-        try {
-            List<String> ports = App.getPos().listPorts();
-            for (String portName : ports) {
-                Button button = new Button("Usar puerto " + portName);
-                button.setOnAction(new EventHandler<ActionEvent>() {
-                                       @Override
-                                       public void handle(ActionEvent actionEvent) {
-                                           openPort(portName);
-                                       }
-                                   }
-                );
-                listPorts.getChildren().add(button);
-            }
-        } catch (TransbankException e) {
-            System.out.println("ports error: " + e);
-            e.printStackTrace();
+        List<String> ports = App.getPos().listPorts();
+        for (String portName : ports) {
+            Button button = new Button("Usar puerto " + portName);
+            button.setOnAction(new EventHandler<ActionEvent>() {
+                   @Override
+                   public void handle(ActionEvent actionEvent) {
+                       openPort(portName);
+                   }
+               }
+            );
+            listPorts.getChildren().add(button);
         }
     }
 
@@ -146,14 +132,14 @@ public class PrimaryController {
         if (total > 0) {
             int randomTicketNumber = getRandomTicket();
             String randomTicket = randomTicketNumber + "T";
-            boleta.setText(StringUtils.padStr(randomTicket, 6));
+            boleta.setText(randomTicket);
             BusinessRunnable actualBusinessLogic = new BusinessRunnable() {
                 @Override
                 public void run() {
                     try {
-                        SaleResponse sale = App.getPos().sale(total, randomTicket);
+                        SaleResponse sale = App.getPos().sale(total, randomTicket, false);
                         setData(sale);
-                    } catch (TransbankPortNotConfiguredException e) {
+                    } catch (TransbankSaleException e) {
                         e.printStackTrace();
                     }
                 }
@@ -164,7 +150,7 @@ public class PrimaryController {
                     textArea.setText(sale.toString());
                     responseCode.setText(sale.getResponseCode() + "");
                     responseMessage.setText(sale.getResponseMessage());
-                    if (sale.isSuccessful()) {
+                    if (sale.isSuccess()) {
                         showOperation(true);
                         operationNumber.setText(sale.getOperationNumber() + "");
                     }
@@ -184,16 +170,16 @@ public class PrimaryController {
 
     @FXML
     private void onRefund() {
-        int ticket = StringUtils.parseInt(refundTicket.getText());
-        if (ticket > 0) {
+        int operationNumber = Integer.parseInt(refundTicket.getText());
+        if (operationNumber > 0) {
             showOperation(false);
             BusinessRunnable actualBusinessLogic = new BusinessRunnable() {
                 @Override
                 public void run() {
                     try {
-                        RefundResponse refund = App.getPos().refund(ticket);
+                        RefundResponse refund = App.getPos().refund(operationNumber);
                         setData(refund);
-                    } catch (TransbankPortNotConfiguredException e) {
+                    } catch (TransbankRefundException e) {
                         e.printStackTrace();
                     }
                 }
@@ -327,7 +313,7 @@ public class PrimaryController {
             System.out.println("polled: " + polled);
             textArea.setText("Polled: " + polled);
             togglearTodo(!polled);
-        } catch (TransbankPortNotConfiguredException e) {
+        } catch (TransbankException e) {
             System.out.println("Error when polling");
             e.printStackTrace();
         }
@@ -348,7 +334,7 @@ public class PrimaryController {
             textArea.setText(closeResponse.toString());
             responseCode.setText(closeResponse.getResponseCode() + "");
             responseMessage.setText(closeResponse.getResponseMessage());
-        } catch (TransbankPortNotConfiguredException e) {
+        } catch (TransbankCloseException e) {
             System.out.println("Error when closing the day.");
             e.printStackTrace();
         }
@@ -367,7 +353,7 @@ public class PrimaryController {
                 sb.append(dr.toString() + "\n");
             }
             textArea.setText(sb.toString());
-        } catch (TransbankPortNotConfiguredException e) {
+        } catch (TransbankDetailException e) {
             System.out.println("Error when closing the day.");
             e.printStackTrace();
         }
@@ -376,12 +362,12 @@ public class PrimaryController {
     @FXML
     private void onKeysLoad() {
         try {
-            KeysResponse keysResponse = App.getPos().loadKeys();
-            textArea.setText(keysResponse.toString());
-            responseCode.setText(keysResponse.getResponseCode() + "");
-            responseMessage.setText(keysResponse.getResponseMessage());
-        } catch (TransbankPortNotConfiguredException e) {
-            System.out.println("Error when closing the day.");
+            LoadKeysResponse loadKeysResponse = App.getPos().loadKeys();
+            textArea.setText(loadKeysResponse.toString());
+            responseCode.setText(loadKeysResponse.getResponseCode() + "");
+            responseMessage.setText(loadKeysResponse.getResponseMessage());
+        } catch (TransbankLoadKeysException e) {
+            System.out.println("Error in load keys.");
             e.printStackTrace();
         }
     }
