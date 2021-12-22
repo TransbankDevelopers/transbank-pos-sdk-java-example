@@ -1,6 +1,7 @@
 package cl.transbank.possdk.example;
-import cl.transbank.pos.POS;
-import cl.transbank.pos.exceptions.TransbankLinkException;
+
+import cl.transbank.pos.POSIntegrado;
+import cl.transbank.pos.exceptions.common.TransbankException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -14,16 +15,16 @@ public class App extends Application{
 
 	private static Scene scene;
 
-	static POS pos = null;
+	static POSIntegrado pos = null;
 
-	public static POS getPos() {
+	public static POSIntegrado getPos() {
 		return pos;
 	}
 
 	@Override
-	public void start(Stage stage) throws IOException, TransbankLinkException {
+	public void start(Stage stage) throws IOException, TransbankException {
 		if (pos == null) {
-			pos = POS.getInstance();
+			pos = new POSIntegrado();
 		}
 		scene = new Scene(loadFXML());
 		stage.setTitle("Caja POS Integrado");
@@ -34,7 +35,7 @@ public class App extends Application{
 
 	@Override
 	public void stop() throws Exception {
-		pos.getInstance().closePort();
+		pos.closePort();
 	}
 
 	private static Parent loadFXML() throws IOException {
