@@ -8,123 +8,134 @@ import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Random;
+import java.util.ResourceBundle;
 
-public class PrimaryController {
+public class PrimaryController implements Initializable {
 
     private int total = 0;
 
-    private Random rng = new Random();
+    private final Random rng = new Random();
+
+    private boolean connectState = false;
+
+    private String selectedPort;
+
+    private final Alert alert = new Alert(Alert.AlertType.INFORMATION);
 
     @FXML
-    private Label operationLabel;
+    private TextArea txtAreaRegister;
 
     @FXML
-    private TextField operationNumber;
+    private TextField txtAmount;
 
     @FXML
-    private Label responseCode;
+    private TextField txtVoucher;
 
     @FXML
-    private Label responseMessage;
+    private TextField txtRefundTicket;
 
     @FXML
-    private VBox listPorts;
+    private Label lblSelectedPort;
 
     @FXML
-    private TextArea textArea;
-
-    @FXML
-    private TextField monto;
-
-    @FXML
-    private TextField boleta;
-
-    @FXML
-    private TextField refundTicket;
-
-    @FXML
-    private TextField usedPort;
+    private Label lblStatusMessage;
 
     @FXML
     private Pane menuPane;
 
     @FXML
-    private Pane ventaPane;
+    private Pane salePane;
 
     @FXML
-    private Pane devolucionPane;
+    private Pane refundPane;
 
     @FXML
-    private Pane otrosPane;
+    private Pane otherPane;
 
     @FXML
-    private Button cerrarPuertoButton;
+    private Button btnConnect;
+
+    @FXML
+    private ComboBox<String> cmbListPorts;
 
     @FXML
     private VBox everything;
 
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        getPorts();
+        App.getPos().setOnIntermediateMessageReceivedListener(this::onIntermediateMessageReceived);
+    }
+
+    private void onIntermediateMessageReceived(IntermediateResponse response) {
+        print(response.getResponseMessage());
+        Platform.runLater(() -> alert.setHeaderText(response.getResponseMessage()));
+    }
+
     @FXML
-    private void addPorts() {
-        listPorts.setSpacing(10.0);
-        listPorts.getChildren().clear();
-        List<String> ports = App.getPos().listPorts();
-        for (String portName : ports) {
-            Button button = new Button("Usar puerto " + portName);
-            button.setOnAction(new EventHandler<ActionEvent>() {
-                   @Override
-                   public void handle(ActionEvent actionEvent) {
-                       openPort(portName);
-                   }
-               }
-            );
-            listPorts.getChildren().add(button);
+    private void connectDisconnect() {
+        if(!connectState) {
+            openPort(selectedPort);
+            return;
         }
+
+        closePort();
+    }
+
+    @FXML
+    private void getPorts() {
+        List<String> ports = App.getPos().listPorts();
+        ObservableList<String> items = FXCollections.observableArrayList(ports);
+
+        if(!items.isEmpty()) {
+            cmbListPorts.setItems(items);
+            return;
+        }
+
+        cmbListPorts.setPromptText("No hay puertos");
     }
 
     @FXML
     private void addCombo() {
         total += 5000;
-        monto.setText("$ " + total);
-        showOperation(false);
+        txtAmount.setText("$ " + total);
     }
 
     @FXML
     private void addHamburguesa() {
         total += 3500;
-        monto.setText("$ " + total);
-        showOperation(false);
+        txtAmount.setText("$ " + total);
     }
 
     @FXML
     private void addTaco() {
         total += 2000;
-        monto.setText("$ " + total);
-        showOperation(false);
+        txtAmount.setText("$ " + total);
     }
 
     @FXML
     private void addCoffee() {
         total += 1000;
-        monto.setText("$ " + total);
-        showOperation(false);
+        txtAmount.setText("$ " + total);
     }
 
     @FXML
     private void resetSale() {
         total = 0;
-        monto.setText("$ " + total);
-        boleta.setText("");
-        showOperation(false);
+        txtAmount.setText("$ " + total);
+        txtVoucher.setText("");
     }
 
     @FXML
@@ -132,12 +143,12 @@ public class PrimaryController {
         if (total > 0) {
             int randomTicketNumber = getRandomTicket();
             String randomTicket = randomTicketNumber + "T";
-            boleta.setText(randomTicket);
+            txtVoucher.setText(randomTicket);
             BusinessRunnable actualBusinessLogic = new BusinessRunnable() {
                 @Override
                 public void run() {
                     try {
-                        SaleResponse sale = App.getPos().sale(total, randomTicket, false);
+                        SaleResponse sale = App.getPos().sale(total, randomTicket, true);
                         setData(sale);
                     } catch (TransbankSaleException e) {
                         e.printStackTrace();
@@ -147,88 +158,77 @@ public class PrimaryController {
                 @Override
                 public void updateInterface() {
                     SaleResponse sale = (SaleResponse) data;
-                    textArea.setText(sale.toString());
-                    responseCode.setText(sale.getResponseCode() + "");
-                    responseMessage.setText(sale.getResponseMessage());
-                    if (sale.isSuccess()) {
-                        showOperation(true);
-                        operationNumber.setText(sale.getOperationNumber() + "");
-                    }
+                    txtAreaRegister.setText(sale.toString());
+                    lblStatusMessage.setText(sale.getResponseMessage());
                 }
 
             };
             makeTheUserLookAtThePOS(actualBusinessLogic, "Debe realizar la venta en el POS!");
         } else {
-            moveMonto(monto);
+            moveTextField(txtAmount);
         }
-    }
-
-    private void showOperation(boolean doShow) {
-        operationLabel.setVisible(doShow);
-        operationNumber.setVisible(doShow);
     }
 
     @FXML
     private void onRefund() {
-        int operationNumber = Integer.parseInt(refundTicket.getText());
-        if (operationNumber > 0) {
-            showOperation(false);
-            BusinessRunnable actualBusinessLogic = new BusinessRunnable() {
-                @Override
-                public void run() {
-                    try {
-                        RefundResponse refund = App.getPos().refund(operationNumber);
-                        setData(refund);
-                    } catch (TransbankRefundException e) {
-                        e.printStackTrace();
+        try {
+            int operationNumber = Integer.parseInt(txtRefundTicket.getText());
+            if (operationNumber > 0) {
+                BusinessRunnable actualBusinessLogic = new BusinessRunnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            RefundResponse refund = App.getPos().refund(operationNumber);
+                            setData(refund);
+                        } catch (TransbankRefundException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-                @Override
-                public void updateInterface() {
-                    RefundResponse refund = (RefundResponse) data;
-                    textArea.setText(refund.toString());
-                    responseCode.setText(refund.getResponseCode() + "");
-                    responseMessage.setText(refund.getResponseMessage());
-                }
 
-            };
-            makeTheUserLookAtThePOS(actualBusinessLogic, "Debe realizar la devolucion en el POS!");
-        } else {
-            moveMonto(refundTicket);
+                    @Override
+                    public void updateInterface() {
+                        RefundResponse refund = (RefundResponse) data;
+                        txtAreaRegister.setText(refund.toString());
+                        lblStatusMessage.setText(refund.getResponseMessage());
+                    }
+
+                };
+                makeTheUserLookAtThePOS(actualBusinessLogic, "Debe realizar la devolución en el POS!");
+            } else {
+                moveTextField(txtRefundTicket);
+            }
+        }
+        catch (NumberFormatException e) {
+            moveTextField(txtRefundTicket);
         }
     }
 
     private void makeTheUserLookAtThePOS(BusinessRunnable actualBusinessLogic, String text) {
-        showOperation(false);
-
-        final Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Advertencia");
         alert.setHeaderText(text);
-        //hack. Escondemos el boton de "ok"
+        //Hack. Escondemos el botón de "ok"
         alert.getDialogPane().lookupButton(ButtonType.OK).setScaleX(0.0);
         alert.getDialogPane().lookupButton(ButtonType.OK).setScaleY(0.0);
         alert.show();
+
         everything.setDisable(true);
-        Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    actualBusinessLogic.run();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    Platform.runLater(() -> {
-                        alert.close();
-                        actualBusinessLogic.updateInterface();
-                        everything.setDisable(false);
-                    });
-                }
+        Runnable r = () -> {
+            try {
+                actualBusinessLogic.run();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                Platform.runLater(() -> {
+                    alert.close();
+                    actualBusinessLogic.updateInterface();
+                    everything.setDisable(false);
+                });
             }
         };
         new Thread(r).start();
     }
 
-    private void moveMonto(TextField textField) {
+    private void moveTextField(TextField textField) {
         SequentialTransition seq = new SequentialTransition();
         double angle = 3.0;
         double duration = 40;
@@ -273,69 +273,74 @@ public class PrimaryController {
     }
 
     @FXML
-    private void cerrarPuerto() {
-        togglearTodo(true);
-        usedPort.setText("");
+    private void closePort() {
+        toggleAllPane(true);
         App.getPos().closePort();
+        lblSelectedPort.setText("Desconectado");
+        btnConnect.setText("Conectar");
+        lblStatusMessage.setText("");
+        connectState = false;
     }
 
+    @FXML
     private void openPort(String portName) {
-        System.out.println("+ abriendo puerto: " + portName);
+        print("+ abriendo puerto: " + portName);
         try {
             App.getPos().openPort(portName);
-            usedPort.setText(portName);
-            System.out.println("+ puerto abierto");
+            lblSelectedPort.setText(portName);
+            connectState = true;
+            btnConnect.setText("Desconectar");
+            print("+ puerto abierto");
             boolean polled = App.getPos().poll();
-            textArea.setText("Polled: " + polled);
-            cerrarPuertoButton.setDisable(false);
-            togglearTodo(!polled);
+            txtAreaRegister.setText("Polled: " + polled);
+            btnConnect.setDisable(false);
+            toggleAllPane(!polled);
             if (!polled) {
-                showAlert("El puerto no respondio.");
+                showAlert("El puerto no respondió.");
             }
         } catch (Exception e) {
-            textArea.setText(e.getMessage());
+            txtAreaRegister.setText(e.getMessage());
             e.printStackTrace();
         }
     }
 
     private void showAlert(String text) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Advertencia");
-        alert.setHeaderText(text);
-        alert.showAndWait();
+        Alert al = new Alert(Alert.AlertType.INFORMATION);
+        al.setTitle("Advertencia");
+        al.setHeaderText(text);
+        al.showAndWait();
     }
 
     @FXML
-    private void pollPort() {
-        System.out.println("+ polling port");
+    private void onPollPort() {
+        print("+ polling port");
         try {
             boolean polled = App.getPos().poll();
-            System.out.println("polled: " + polled);
-            textArea.setText("Polled: " + polled);
-            togglearTodo(!polled);
+            String resultText = String.format("polled: %s", polled ? "Ok" : "NOk");
+            print(resultText);
+            txtAreaRegister.setText(resultText);
+            toggleAllPane(!polled);
         } catch (TransbankException e) {
-            System.out.println("Error when polling");
+            print("Error when polling");
             e.printStackTrace();
         }
     }
 
-    private void togglearTodo(boolean disable) {
-        ventaPane.setDisable(disable);
+    private void toggleAllPane(boolean disable) {
+        salePane.setDisable(disable);
         menuPane.setDisable(disable);
-        otrosPane.setDisable(disable);
-        devolucionPane.setDisable(disable);
-        cerrarPuertoButton.setDisable(disable);
+        otherPane.setDisable(disable);
+        refundPane.setDisable(disable);
     }
 
     @FXML
     private void onBusinessClose() {
         try {
             CloseResponse closeResponse = App.getPos().close();
-            textArea.setText(closeResponse.toString());
-            responseCode.setText(closeResponse.getResponseCode() + "");
-            responseMessage.setText(closeResponse.getResponseMessage());
+            txtAreaRegister.setText(closeResponse.toString());
+            lblStatusMessage.setText(closeResponse.getResponseMessage());
         } catch (TransbankCloseException e) {
-            System.out.println("Error when closing the day.");
+            print("Error when closing the day.");
             e.printStackTrace();
         }
     }
@@ -345,16 +350,16 @@ public class PrimaryController {
         try {
             List<DetailResponse> detailResponse = App.getPos().details(false);
             if (detailResponse.isEmpty()) {
-                textArea.setText("No hay transacciones previas.");
+                txtAreaRegister.setText("No hay transacciones previas.");
                 return;
             }
             StringBuilder sb = new StringBuilder();
             for (DetailResponse dr: detailResponse) {
-                sb.append(dr.toString() + "\n");
+                sb.append(dr.toString()).append("\n");
             }
-            textArea.setText(sb.toString());
+            txtAreaRegister.setText(sb.toString());
         } catch (TransbankDetailException e) {
-            System.out.println("Error when closing the day.");
+            print("Error when get transaction list.");
             e.printStackTrace();
         }
     }
@@ -363,13 +368,48 @@ public class PrimaryController {
     private void onKeysLoad() {
         try {
             LoadKeysResponse loadKeysResponse = App.getPos().loadKeys();
-            textArea.setText(loadKeysResponse.toString());
-            responseCode.setText(loadKeysResponse.getResponseCode() + "");
-            responseMessage.setText(loadKeysResponse.getResponseMessage());
+            txtAreaRegister.setText(loadKeysResponse.toString());
+            lblStatusMessage.setText(loadKeysResponse.getResponseMessage());
         } catch (TransbankLoadKeysException e) {
-            System.out.println("Error in load keys.");
+            print("Error in load keys.");
             e.printStackTrace();
         }
     }
 
+    @FXML
+    private void onCmbListPortsChanged() {
+        selectedPort = cmbListPorts.getSelectionModel().getSelectedItem();
+        btnConnect.setDisable(false);
+    }
+
+    @FXML
+    private void onSetNormalMode() {
+        print("+ set normal mode");
+        try {
+            boolean result = App.getPos().poll();
+            String resultText = String.format("normal mode: %s", result ? "Ok" : "NOk");
+            print(resultText);
+            txtAreaRegister.setText(resultText);
+            toggleAllPane(!result);
+        } catch (TransbankException e) {
+            print("Error when change to normal mode");
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void onTotalSale() {
+        try {
+            TotalsResponse totalsResponse = App.getPos().totals();
+            txtAreaRegister.setText(totalsResponse.toString());
+            lblStatusMessage.setText(totalsResponse.getResponseMessage());
+        } catch (TransbankTotalsException e) {
+            print("Error in total sale.");
+            e.printStackTrace();
+        }
+    }
+
+    private void print(String text) {
+        System.out.println(text);
+    }
 }
