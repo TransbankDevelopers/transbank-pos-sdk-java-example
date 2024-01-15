@@ -22,7 +22,7 @@ by: William Siqueira
       <dependency>
          <groupId>com.github.transbankdevelopers</groupId>
          <artifactId>transbank-sdk-pos-java</artifactId>
-         <version>3.0.0</version>
+         <version>3.1.0</version>
       </dependency>
    </dependencies>
    <build>
