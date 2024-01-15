@@ -386,7 +386,7 @@ public class PrimaryController implements Initializable {
     private void onSetNormalMode() {
         print("+ set normal mode");
         try {
-            boolean result = App.getPos().poll();
+            boolean result = App.getPos().setNormalMode();
             String resultText = String.format("normal mode: %s", result ? "Ok" : "NOk");
             print(resultText);
             txtAreaRegister.setText(resultText);
