@@ -44,6 +44,12 @@ public class PrimaryController implements Initializable {
     private TextField txtVoucher;
 
     @FXML
+    private CheckBox sendVoucherCheck;
+
+    @FXML
+    private CheckBox sendStatusCheck;
+
+    @FXML
     private TextField txtRefundTicket;
 
     @FXML
@@ -76,12 +82,6 @@ public class PrimaryController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         getPorts();
-        App.getPos().setOnIntermediateMessageReceivedListener(this::onIntermediateMessageReceived);
-    }
-
-    private void onIntermediateMessageReceived(IntermediateResponse response) {
-        print(response.getResponseMessage());
-        Platform.runLater(() -> alert.setHeaderText(response.getResponseMessage()));
     }
 
     @FXML
@@ -148,7 +148,8 @@ public class PrimaryController implements Initializable {
                 @Override
                 public void run() {
                     try {
-                        SaleResponse sale = App.getPos().sale(total, randomTicket, true);
+                        boolean sendVoucher = sendVoucherCheck != null && sendVoucherCheck.isSelected();
+                        SaleResponse sale = App.getPos().sale(total, randomTicket, sendVoucher, false);
                         setData(sale);
                     } catch (TransbankSaleException e) {
                         e.printStackTrace();
@@ -159,7 +160,7 @@ public class PrimaryController implements Initializable {
                 public void updateInterface() {
                     SaleResponse sale = (SaleResponse) data;
                     txtAreaRegister.setText(sale.toString());
-                    lblStatusMessage.setText(sale.getResponseMessage());
+                    lblStatusMessage.setText(getResponseMessage(sale));
                 }
 
             };
@@ -189,7 +190,7 @@ public class PrimaryController implements Initializable {
                     public void updateInterface() {
                         RefundResponse refund = (RefundResponse) data;
                         txtAreaRegister.setText(refund.toString());
-                        lblStatusMessage.setText(refund.getResponseMessage());
+                        lblStatusMessage.setText(getResponseMessage(refund));
                     }
 
                 };
@@ -338,7 +339,7 @@ public class PrimaryController implements Initializable {
         try {
             CloseResponse closeResponse = App.getPos().close();
             txtAreaRegister.setText(closeResponse.toString());
-            lblStatusMessage.setText(closeResponse.getResponseMessage());
+            lblStatusMessage.setText(getResponseMessage(closeResponse));
         } catch (TransbankCloseException e) {
             print("Error when closing the day.");
             e.printStackTrace();
@@ -369,7 +370,7 @@ public class PrimaryController implements Initializable {
         try {
             LoadKeysResponse loadKeysResponse = App.getPos().loadKeys();
             txtAreaRegister.setText(loadKeysResponse.toString());
-            lblStatusMessage.setText(loadKeysResponse.getResponseMessage());
+            lblStatusMessage.setText(getResponseMessage(loadKeysResponse));
         } catch (TransbankLoadKeysException e) {
             print("Error in load keys.");
             e.printStackTrace();
@@ -402,7 +403,7 @@ public class PrimaryController implements Initializable {
         try {
             TotalsResponse totalsResponse = App.getPos().totals();
             txtAreaRegister.setText(totalsResponse.toString());
-            lblStatusMessage.setText(totalsResponse.getResponseMessage());
+            lblStatusMessage.setText(getResponseMessage(totalsResponse));
         } catch (TransbankTotalsException e) {
             print("Error in total sale.");
             e.printStackTrace();
@@ -411,5 +412,37 @@ public class PrimaryController implements Initializable {
 
     private void print(String text) {
         System.out.println(text);
+    }
+
+    private String getResponseMessage(Object resp) {
+        if (resp == null) return "";
+        try {
+            String[] methodNames = {"getResponseMessage", "getMessage", "getResponseText", "getResponse"};
+            for (String name : methodNames) {
+                try {
+                    java.lang.reflect.Method m = resp.getClass().getMethod(name);
+                    Object result = m.invoke(resp);
+                    if (result != null) return String.valueOf(result);
+                } catch (NoSuchMethodException ignored) { }
+            }
+
+            try {
+                java.lang.reflect.Method getResponse = resp.getClass().getMethod("getResponse");
+                Object inner = getResponse.invoke(resp);
+                if (inner != null) {
+                    String[] innerNames = {"getResponseMessage", "getMessage", "getResponseText"};
+                    for (String name : innerNames) {
+                        try {
+                            java.lang.reflect.Method m = inner.getClass().getMethod(name);
+                            Object result = m.invoke(inner);
+                            if (result != null) return String.valueOf(result);
+                        } catch (NoSuchMethodException ignored) { }
+                    }
+                }
+            } catch (NoSuchMethodException ignored) { }
+        } catch (Exception e) {
+            // ignore and fallback
+        }
+        return resp.toString();
     }
 }
