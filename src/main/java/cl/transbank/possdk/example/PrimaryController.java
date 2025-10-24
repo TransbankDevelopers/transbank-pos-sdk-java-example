@@ -83,6 +83,9 @@ public class PrimaryController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         getPorts();
         App.getPos().setOnIntermediateMessageReceivedListener(this::onIntermediateMessageReceived);
+        txtAreaRegister.textProperty().addListener((observable, oldValue, newValue) -> {
+            javafx.application.Platform.runLater(() -> txtAreaRegister.positionCaret(newValue.length()));
+        });
     }
 
     private void onIntermediateMessageReceived(IntermediateResponse response) {
