@@ -37,7 +37,9 @@ public class App extends Application {
 
 	@Override
 	public void stop() throws Exception {
-		pos.closePort();
+		if (pos != null && pos.isPortOpen()) {
+			pos.closePort();
+		}
 	}
 
 	private static Parent loadFXML() throws IOException {
