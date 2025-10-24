@@ -31,6 +31,8 @@ public class App extends Application {
 		scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
 		stage.setScene(scene);
 		stage.show();
+		stage.toFront();
+		stage.requestFocus();
 	}
 
 	@Override
