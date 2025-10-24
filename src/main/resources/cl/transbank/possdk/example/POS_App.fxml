@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Button?>
@@ -15,11 +21,14 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 
-<VBox fx:id="everything" prefHeight="690.0" prefWidth="1016.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cl.transbank.possdk.example.PrimaryController">
+<VBox fx:id="everything" prefHeight="710.0" prefWidth="1043.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cl.transbank.possdk.example.PrimaryController">
   <children>
     <AnchorPane maxWidth="-1.0" minHeight="700.0" prefHeight="700.0" prefWidth="1020.0" VBox.vgrow="ALWAYS">
       <children>
-            <TextArea fx:id="txtAreaRegister" layoutX="734.0" layoutY="186.0" prefHeight="509.0" prefWidth="273.0" wrapText="true" />
+            <TextArea fx:id="txtAreaRegister" layoutX="734.0" layoutY="186.0" prefHeight="509.0" prefWidth="400.0">
+               <font>
+                  <Font name="Monospaced Regular" size="14.0" />
+               </font></TextArea>
             <VBox layoutY="3.0" prefHeight="695.0" prefWidth="724.0" spacing="10.0">
                <children>
                   <Pane prefHeight="55.0" prefWidth="724.0" style="-fx-background-color: #ddeeee;">
@@ -81,10 +90,11 @@
                         <Label layoutX="65.0" layoutY="34.0" text="Monto:" />
                         <Label layoutX="277.0" layoutY="34.0" text="Boleta: " />
                         <TextField fx:id="txtVoucher" editable="false" layoutX="325.0" layoutY="29.0" />
-                        <CheckBox fx:id="sendVoucherCheck" layoutX="325.0" layoutY="60.0" text="Imprimir voucher en respuesta" selected="true" />
+                        <CheckBox fx:id="sendVoucherCheck" layoutX="325.0" layoutY="60.0" selected="true" text="Imprimir voucher en respuesta" />
                         <Button fx:id="venderButton" layoutX="513.0" layoutY="29.0" mnemonicParsing="false" onAction="#doSale" text="Vender" />
                         <Label layoutX="14.0" layoutY="6.0" text="Venta:" />
                         <Button fx:id="anularButton" layoutX="600.0" layoutY="29.0" mnemonicParsing="false" onAction="#resetSale" text="Limpiar" />
+                        <CheckBox fx:id="sendStatusCheck" layoutX="325.0" layoutY="81.0" mnemonicParsing="false" selected="true" text="Enviar mensajes intermedios" />
                      </children>
                   </Pane>
                   <Pane fx:id="refundPane" disable="true" prefHeight="73.0" prefWidth="724.0" style="-fx-background-color: #eedddd;">
@@ -118,7 +128,7 @@
             <Label layoutX="736.0" layoutY="61.0" text="Estado operación:" />
             <Label fx:id="lblStatusMessage" layoutX="840.0" layoutY="61.0" maxWidth="160.0" wrapText="true" />
             <Separator layoutX="723.0" layoutY="-5.0" orientation="VERTICAL" prefHeight="710.0" prefWidth="13.0" />
-            <Separator layoutX="728.0" layoutY="155.0" prefHeight="5.0" prefWidth="279.0" />
+            <Separator layoutX="734.0" layoutY="158.0" prefHeight="5.0" prefWidth="400.0" />
       </children>
          <VBox.margin>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

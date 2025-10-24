@@ -155,7 +155,8 @@ public class PrimaryController implements Initializable {
                 public void run() {
                     try {
                         boolean sendVoucher = sendVoucherCheck != null && sendVoucherCheck.isSelected();
-                        SaleResponse sale = App.getPos().sale(total, randomTicket, sendVoucher, true);
+                        boolean sendStatus = sendStatusCheck != null && sendStatusCheck.isSelected();
+                        SaleResponse sale = App.getPos().sale(total, randomTicket, sendVoucher, sendStatus);
                         setData(sale);
                     } catch (TransbankSaleException e) {
                         e.printStackTrace();
