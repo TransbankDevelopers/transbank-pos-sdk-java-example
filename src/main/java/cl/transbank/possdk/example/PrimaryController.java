@@ -86,7 +86,7 @@ public class PrimaryController implements Initializable {
 
     @FXML
     private void connectDisconnect() {
-        if(!connectState) {
+        if (!connectState) {
             openPort(selectedPort);
             return;
         }
@@ -99,7 +99,7 @@ public class PrimaryController implements Initializable {
         List<String> ports = App.getPos().listPorts();
         ObservableList<String> items = FXCollections.observableArrayList(ports);
 
-        if(!items.isEmpty()) {
+        if (!items.isEmpty()) {
             cmbListPorts.setItems(items);
             return;
         }
@@ -149,7 +149,7 @@ public class PrimaryController implements Initializable {
                 public void run() {
                     try {
                         boolean sendVoucher = sendVoucherCheck != null && sendVoucherCheck.isSelected();
-                        SaleResponse sale = App.getPos().sale(total, randomTicket, sendVoucher, false);
+                        SaleResponse sale = App.getPos().sale(total, randomTicket, sendVoucher, true);
                         setData(sale);
                     } catch (TransbankSaleException e) {
                         e.printStackTrace();
@@ -160,7 +160,7 @@ public class PrimaryController implements Initializable {
                 public void updateInterface() {
                     SaleResponse sale = (SaleResponse) data;
                     txtAreaRegister.setText(sale.toString());
-                    lblStatusMessage.setText(getResponseMessage(sale));
+                    lblStatusMessage.setText(sale.getResponseMessage());
                 }
 
             };
@@ -190,7 +190,7 @@ public class PrimaryController implements Initializable {
                     public void updateInterface() {
                         RefundResponse refund = (RefundResponse) data;
                         txtAreaRegister.setText(refund.toString());
-                        lblStatusMessage.setText(getResponseMessage(refund));
+                        lblStatusMessage.setText(refund.getResponseMessage());
                     }
 
                 };
@@ -198,8 +198,7 @@ public class PrimaryController implements Initializable {
             } else {
                 moveTextField(txtRefundTicket);
             }
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             moveTextField(txtRefundTicket);
         }
     }
@@ -207,7 +206,7 @@ public class PrimaryController implements Initializable {
     private void makeTheUserLookAtThePOS(BusinessRunnable actualBusinessLogic, String text) {
         alert.setTitle("Advertencia");
         alert.setHeaderText(text);
-        //Hack. Escondemos el botón de "ok"
+        // Hack. Escondemos el botón de "ok"
         alert.getDialogPane().lookupButton(ButtonType.OK).setScaleX(0.0);
         alert.getDialogPane().lookupButton(ButtonType.OK).setScaleY(0.0);
         alert.show();
@@ -339,7 +338,7 @@ public class PrimaryController implements Initializable {
         try {
             CloseResponse closeResponse = App.getPos().close();
             txtAreaRegister.setText(closeResponse.toString());
-            lblStatusMessage.setText(getResponseMessage(closeResponse));
+            lblStatusMessage.setText(closeResponse.getResponseMessage());
         } catch (TransbankCloseException e) {
             print("Error when closing the day.");
             e.printStackTrace();
@@ -355,7 +354,7 @@ public class PrimaryController implements Initializable {
                 return;
             }
             StringBuilder sb = new StringBuilder();
-            for (DetailResponse dr: detailResponse) {
+            for (DetailResponse dr : detailResponse) {
                 sb.append(dr.toString()).append("\n");
             }
             txtAreaRegister.setText(sb.toString());
@@ -370,7 +369,7 @@ public class PrimaryController implements Initializable {
         try {
             LoadKeysResponse loadKeysResponse = App.getPos().loadKeys();
             txtAreaRegister.setText(loadKeysResponse.toString());
-            lblStatusMessage.setText(getResponseMessage(loadKeysResponse));
+            lblStatusMessage.setText(loadKeysResponse.getResponseMessage());
         } catch (TransbankLoadKeysException e) {
             print("Error in load keys.");
             e.printStackTrace();
@@ -403,7 +402,7 @@ public class PrimaryController implements Initializable {
         try {
             TotalsResponse totalsResponse = App.getPos().totals();
             txtAreaRegister.setText(totalsResponse.toString());
-            lblStatusMessage.setText(getResponseMessage(totalsResponse));
+            lblStatusMessage.setText(totalsResponse.getResponseMessage());
         } catch (TransbankTotalsException e) {
             print("Error in total sale.");
             e.printStackTrace();
@@ -412,37 +411,5 @@ public class PrimaryController implements Initializable {
 
     private void print(String text) {
         System.out.println(text);
-    }
-
-    private String getResponseMessage(Object resp) {
-        if (resp == null) return "";
-        try {
-            String[] methodNames = {"getResponseMessage", "getMessage", "getResponseText", "getResponse"};
-            for (String name : methodNames) {
-                try {
-                    java.lang.reflect.Method m = resp.getClass().getMethod(name);
-                    Object result = m.invoke(resp);
-                    if (result != null) return String.valueOf(result);
-                } catch (NoSuchMethodException ignored) { }
-            }
-
-            try {
-                java.lang.reflect.Method getResponse = resp.getClass().getMethod("getResponse");
-                Object inner = getResponse.invoke(resp);
-                if (inner != null) {
-                    String[] innerNames = {"getResponseMessage", "getMessage", "getResponseText"};
-                    for (String name : innerNames) {
-                        try {
-                            java.lang.reflect.Method m = inner.getClass().getMethod(name);
-                            Object result = m.invoke(inner);
-                            if (result != null) return String.valueOf(result);
-                        } catch (NoSuchMethodException ignored) { }
-                    }
-                }
-            } catch (NoSuchMethodException ignored) { }
-        } catch (Exception e) {
-            // ignore and fallback
-        }
-        return resp.toString();
     }
 }
