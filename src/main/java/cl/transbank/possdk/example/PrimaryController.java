@@ -82,6 +82,12 @@ public class PrimaryController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         getPorts();
+        App.getPos().setOnIntermediateMessageReceivedListener(this::onIntermediateMessageReceived);
+    }
+
+    private void onIntermediateMessageReceived(IntermediateResponse response) {
+        print(response.getResponseMessage());
+        Platform.runLater(() -> alert.setHeaderText(response.getResponseMessage()));
     }
 
     @FXML
